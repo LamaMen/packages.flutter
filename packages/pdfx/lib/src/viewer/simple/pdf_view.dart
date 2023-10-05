@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:pdfx/src/renderer/interfaces/document.dart';
 import 'package:pdfx/src/renderer/interfaces/page.dart';
@@ -206,28 +207,40 @@ class _PdfViewState extends State<PdfView> {
         heroAttributes: PhotoViewHeroAttributes(tag: '${document.id}-$index'),
       );
 
-  Widget _buildLoaded(BuildContext context) => PhotoViewGallery.builder(
-        builder: (context, index) => widget.builders.pageBuilder(
-          context,
-          _getPageImage(index),
-          index,
-          _controller._document!,
-          widget.photoViewController,
-        ),
-        itemCount: _controller._document?.pagesCount ?? 0,
-        loadingBuilder: (_, __) =>
-            widget.builders.pageLoaderBuilder?.call(context) ??
-            const SizedBox(),
-        backgroundDecoration: widget.backgroundDecoration,
-        pageController: _controller._pageController,
-        onPageChanged: (index) {
-          final pageNumber = index + 1;
-          _controller.pageListenable.value = pageNumber;
-          widget.onPageChanged?.call(pageNumber);
+  Widget _buildLoaded(BuildContext context) => Listener(
+        onPointerSignal: (ps) {
+          if (ps is PointerScrollEvent &&
+              ps.kind == PointerDeviceKind.trackpad) {
+            (_controller._pageController as ScrollController).animateTo(
+              ps.position.dy,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.linear,
+            );
+          }
         },
-        scrollDirection: widget.scrollDirection,
-        reverse: widget.reverse,
-        scrollPhysics: widget.physics,
-        allowImplicitScrolling: widget.pageSnapping,
+        child: PhotoViewGallery.builder(
+          builder: (context, index) => widget.builders.pageBuilder(
+            context,
+            _getPageImage(index),
+            index,
+            _controller._document!,
+            widget.photoViewController,
+          ),
+          itemCount: _controller._document?.pagesCount ?? 0,
+          loadingBuilder: (_, __) =>
+              widget.builders.pageLoaderBuilder?.call(context) ??
+              const SizedBox(),
+          backgroundDecoration: widget.backgroundDecoration,
+          pageController: _controller._pageController,
+          onPageChanged: (index) {
+            final pageNumber = index + 1;
+            _controller.pageListenable.value = pageNumber;
+            widget.onPageChanged?.call(pageNumber);
+          },
+          scrollDirection: widget.scrollDirection,
+          reverse: widget.reverse,
+          scrollPhysics: const NeverScrollableScrollPhysics(),
+          allowImplicitScrolling: widget.pageSnapping,
+        ),
       );
 }
