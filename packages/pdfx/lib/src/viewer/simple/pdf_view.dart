@@ -206,20 +206,43 @@ class _PdfViewState extends State<PdfView> {
         heroAttributes: PhotoViewHeroAttributes(tag: '${document.id}-$index'),
       );
 
-  Widget _buildLoaded(BuildContext context) => PhotoViewGallery.builder(
-        builder: (context, index) => widget.builders.pageBuilder(
-          context,
-          _getPageImage(index),
-          index,
-          _controller._document!,
-          widget.photoViewController,
-        ),
+  Widget _buildLoaded(BuildContext context) => PageView.builder(
+        pageSnapping: widget.pageSnapping,
+        itemBuilder: (context, index) {
+          final pageOption = widget.builders.pageBuilder(
+            context,
+            _getPageImage(index),
+            index,
+            _controller._document!,
+            widget.photoViewController,
+          );
+
+          return PhotoView(
+            key: ObjectKey(index),
+            imageProvider: pageOption.imageProvider,
+            loadingBuilder: (_, __) =>
+                widget.builders.pageLoaderBuilder?.call(context) ??
+                const SizedBox(),
+            backgroundDecoration: widget.backgroundDecoration,
+            controller: pageOption.controller,
+            scaleStateController: pageOption.scaleStateController,
+            heroAttributes: pageOption.heroAttributes,
+            initialScale: pageOption.initialScale,
+            minScale: pageOption.minScale,
+            maxScale: pageOption.maxScale,
+            scaleStateCycle: pageOption.scaleStateCycle,
+            onTapUp: pageOption.onTapUp,
+            onTapDown: pageOption.onTapDown,
+            onScaleEnd: pageOption.onScaleEnd,
+            gestureDetectorBehavior: pageOption.gestureDetectorBehavior,
+            tightMode: pageOption.tightMode,
+            filterQuality: pageOption.filterQuality,
+            basePosition: pageOption.basePosition,
+            disableGestures: pageOption.disableGestures,
+            errorBuilder: pageOption.errorBuilder,
+          );
+        },
         itemCount: _controller._document?.pagesCount ?? 0,
-        loadingBuilder: (_, __) =>
-            widget.builders.pageLoaderBuilder?.call(context) ??
-            const SizedBox(),
-        backgroundDecoration: widget.backgroundDecoration,
-        pageController: _controller._pageController,
         onPageChanged: (index) {
           final pageNumber = index + 1;
           _controller.pageListenable.value = pageNumber;
@@ -227,7 +250,6 @@ class _PdfViewState extends State<PdfView> {
         },
         scrollDirection: widget.scrollDirection,
         reverse: widget.reverse,
-        scrollPhysics: widget.physics,
-        allowImplicitScrolling: widget.pageSnapping,
+        physics: widget.physics,
       );
 }
