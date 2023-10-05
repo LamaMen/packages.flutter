@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:pdfx/src/renderer/interfaces/document.dart';
@@ -211,11 +213,14 @@ class _PdfViewState extends State<PdfView> {
         onPointerSignal: (ps) {
           if (ps is PointerScrollEvent &&
               ps.kind == PointerDeviceKind.trackpad) {
-            (_controller._pageController as ScrollController).animateTo(
-              ps.position.dy,
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.linear,
-            );
+            final contoller = _controller._pageController as ScrollController;
+            final newOffset = contoller.offset + ps.scrollDelta.dy;
+            if (ps.scrollDelta.dy.isNegative) {
+              contoller.jumpTo(math.max(0, newOffset));
+            } else {
+              contoller.jumpTo(
+                  math.min(contoller.position.maxScrollExtent, newOffset));
+            }
           }
         },
         child: PhotoViewGallery.builder(
