@@ -219,7 +219,7 @@ class _PdfViewState extends State<PdfView> {
             widget.builders.pageLoaderBuilder?.call(context) ??
             const SizedBox(),
         backgroundDecoration: widget.backgroundDecoration,
-        pageController: _controller._pageController,
+        pageController: _controller.pageController,
         onPageChanged: (index) {
           final pageNumber = index + 1;
           _controller.pageListenable.value = pageNumber;
