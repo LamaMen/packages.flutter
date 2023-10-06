@@ -1,6 +1,3 @@
-import 'dart:math' as math;
-
-import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:pdfx/src/renderer/interfaces/document.dart';
 import 'package:pdfx/src/renderer/interfaces/page.dart';
@@ -15,6 +12,14 @@ part 'pdf_controller.dart';
 part 'pdf_view_builders.dart';
 
 typedef PDfViewPageRenderer = Future<PdfPageImage?> Function(PdfPage page);
+typedef PDfViewPageBuilder = Widget Function({
+  required BuildContext context,
+  required PdfViewBuilders builders,
+  required int pageCount,
+  required PageController? controller,
+  // Returned widget must call this callback on page change!
+  required PhotoViewGalleryPageChangedCallback onPageChanged,
+});
 
 final Lock _lock = Lock();
 
@@ -31,6 +36,7 @@ class PdfView extends StatefulWidget {
     this.renderer = _render,
     this.scrollDirection = Axis.horizontal,
     this.reverse = false,
+    this.builder,
     this.pageSnapping = false,
     this.physics,
     this.backgroundDecoration = const BoxDecoration(),
@@ -73,6 +79,9 @@ class PdfView extends StatefulWidget {
 
   /// Controller for photo view.
   final PhotoViewController? photoViewController;
+
+  /// Controller for photo view.
+  final PDfViewPageBuilder? builder;
 
   /// Default PdfRenderer options
   static Future<PdfPageImage?> _render(PdfPage page) => page.render(
@@ -209,21 +218,19 @@ class _PdfViewState extends State<PdfView> {
         heroAttributes: PhotoViewHeroAttributes(tag: '${document.id}-$index'),
       );
 
-  Widget _buildLoaded(BuildContext context) => Listener(
-        onPointerSignal: (ps) {
-          if (ps is PointerScrollEvent &&
-              ps.kind == PointerDeviceKind.trackpad) {
-            final contoller = _controller._pageController as ScrollController;
-            final newOffset = contoller.offset + ps.scrollDelta.dy;
-            if (ps.scrollDelta.dy.isNegative) {
-              contoller.jumpTo(math.max(0, newOffset));
-            } else {
-              contoller.jumpTo(
-                  math.min(contoller.position.maxScrollExtent, newOffset));
-            }
-          }
-        },
-        child: PhotoViewGallery.builder(
+  Widget _buildLoaded(BuildContext context) => widget.builder != null
+      ? widget.builder!(
+          context: context,
+          builders: widget.builders,
+          controller: _controller._pageController,
+          pageCount: _controller._document?.pagesCount ?? 0,
+          onPageChanged: (index) {
+            final pageNumber = index + 1;
+            _controller.pageListenable.value = pageNumber;
+            widget.onPageChanged?.call(pageNumber);
+          },
+        )
+      : PhotoViewGallery.builder(
           builder: (context, index) => widget.builders.pageBuilder(
             context,
             _getPageImage(index),
@@ -244,8 +251,6 @@ class _PdfViewState extends State<PdfView> {
           },
           scrollDirection: widget.scrollDirection,
           reverse: widget.reverse,
-          scrollPhysics: const NeverScrollableScrollPhysics(),
-          allowImplicitScrolling: widget.pageSnapping,
-        ),
-      );
+          scrollPhysics: widget.physics,
+        );
 }
