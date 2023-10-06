@@ -1,3 +1,7 @@
+## 2.5.2
+
+* Open page controller from PdfController
+
 ## 2.5.1
 
 * Added the ability to control the scaling of the pdf display 
