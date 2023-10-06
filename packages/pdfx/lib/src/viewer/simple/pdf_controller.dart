@@ -25,7 +25,7 @@ class PdfController with BasePdfController {
   final double viewportFraction;
 
   _PdfViewState? _pdfViewState;
-  PageController? _pageController;
+  PageController? pageController;
   PdfDocument? _document;
 
   /// Actual page number wrapped with ValueNotifier
@@ -44,7 +44,7 @@ class PdfController with BasePdfController {
   ///
   /// Jumps the page position from its current value to the given value,
   /// without animation, and without checking if the new value is in range.
-  void jumpToPage(int page) => _pageController!.jumpToPage(page - 1);
+  void jumpToPage(int page) => pageController!.jumpToPage(page - 1);
 
   /// Animates the controlled [PdfView] from the current page to the given page.
   ///
@@ -57,7 +57,7 @@ class PdfController with BasePdfController {
     required Duration duration,
     required Curve curve,
   }) =>
-      _pageController!.animateToPage(
+      pageController!.animateToPage(
         page - 1,
         duration: duration,
         curve: curve,
@@ -73,7 +73,7 @@ class PdfController with BasePdfController {
     required Duration duration,
     required Curve curve,
   }) =>
-      _pageController!.animateToPage(_pageController!.page!.round() + 1,
+      pageController!.animateToPage(pageController!.page!.round() + 1,
           duration: duration, curve: curve);
 
   /// Animates the controlled [PdfView] to the previous page.
@@ -86,7 +86,7 @@ class PdfController with BasePdfController {
     required Duration duration,
     required Curve curve,
   }) =>
-      _pageController!.animateToPage(_pageController!.page!.round() - 1,
+      pageController!.animateToPage(pageController!.page!.round() - 1,
           duration: duration, curve: curve);
 
   /// Load document
@@ -122,8 +122,8 @@ class PdfController with BasePdfController {
   }
 
   void _reInitPageController(int initialPage) {
-    _pageController?.dispose();
-    _pageController = PageController(
+    pageController?.dispose();
+    pageController = PageController(
       initialPage: initialPage - 1,
       viewportFraction: viewportFraction,
     );
@@ -148,6 +148,6 @@ class PdfController with BasePdfController {
   }
 
   void dispose() {
-    _pageController?.dispose();
+    pageController?.dispose();
   }
 }
